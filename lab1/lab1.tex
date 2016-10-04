@@ -22,6 +22,29 @@
 	\item \textbf{Draw and briefly describe the architecture of the computer in which you are doing this lab session (number of sockets, cores per socket, threads per core, cache hierarchy size and sharing and amount of main memory).}
 \end{enumerate}
 
+\begin{itemize}
+	\item Processor
+	\begin{itemize}
+		\item Number of sockets: 2
+		\item Cores per socket: 6
+		\item Threads per core: 2
+	\end{itemize}
+	
+	\item Cache
+	\begin{itemize}
+		\item L1 instructions cache (32KB) not shared
+		\item L1 data cache (32KB) not shared
+		\item L2 cache (256KB) not shared
+		\item L3 cache (12MB) shared
+	\end{itemize}
+	
+	\item Memory
+	\begin{itemize}
+		\item Main memory: 23GB
+		\item NUMA node memory: 12 GB
+	\end{itemize}
+\end{itemize}
+
 \section*{Timing sequential and parallel executions}
 
 \begin{enumerate}[resume]
@@ -48,14 +71,17 @@
 	\item \textbf{Complete the following table for the initial and different versions generated for \texttt{3dfft\_seq}, briefly commenting the evolution of the metrics with the different versions.}
 \end{enumerate}
 
-\begin{tabular}{l|rrr}
-	Version & $T_1$ & $T_{\infty}$ & Parallelism \\
-	seq & & & \\
-	v1 & & & \\
-	v2 & & & \\
-	v3 & & & \\
-	v4 & & & 
-\end{tabular}
+\begin{center}
+	\begin{tabular}{l|rrr}
+		Version & $T_1(ms)$ & $T_{\infty}$ & Parallelism \\
+		\hline
+		seq & 593 & 593 & \\
+		v1 & 593 & & \\
+		v2 & 593 & & \\
+		v3 & 593 & & \\
+		v4 & 593 & & 
+	\end{tabular}
+\end{center}
 
 \begin{enumerate}[resume]
 	\item \textbf{With the results from parallel simulation with 2, 4, 8, 16 and 32 processors, draw the execution time and speedup plots for version v4 with respect to the sequential execution (that you can estimate from the simulation of the initial task decomposition that we provided in \texttt{3dfft\_seq.c}, using just 1 processor). Briefly comment the scalability behavior shown on these two plots.}
