@@ -4,6 +4,19 @@
 \usepackage{fontspec}
 \usepackage[english]{babel} % Language 
 \usepackage{enumitem}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},      % keyword style
+    commentstyle=\color{OliveGreen},   % comment style
+    stringstyle=\color{purple}, 
+    tabsize=4
+}
 
 \title{
 	\textsc{PAR: Laboratory 1} \\
@@ -50,6 +63,26 @@
 \begin{enumerate}[resume]
 	\item \textbf{Describe what do you need to add to your program to measure elapsed execution time between a pair of points in the program, clearly indicating the library header file that needs to be included, the library functions that need to be invoked and the data structure and its fields.}
 \end{enumerate}
+
+You need to call the \texttt{gettimeofday()} function when you want to start measuring the time and the same function again when you want to stop. 
+
+\begin{lstlisting}[language=C]
+    #include <time.h>
+
+    gettimeofday(struct timeval *tv, struct timezone *tz);
+    
+    struct timeval {
+        time_t       tv_sec;    // seconds
+        susseconds_t tv_usec;   // microseconds since the Epoch
+    }
+    
+    struct timezone {
+        int tz_minteswest;      // minutes west of Greenwich
+        int tz_dsttime;	        // type of DST correction
+    }
+\end{lstlisting}
+
+The \texttt{gettimeofday()} function returns the seconds and microseconds since January the 1st, 1970. Then you can subtract the final microseconds with the starting microseconds to know the function's elapsed time. 
 
 \begin{enumerate}[resume]
 	\item \textbf{Plot the speed-up obtained when varying the number of threads (strong scalability) and problem size (weak scalability) for \texttt{pi\_omp.c}. Reason about how the scalability of the program.}
