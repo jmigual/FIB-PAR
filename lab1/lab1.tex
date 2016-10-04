@@ -1,11 +1,21 @@
 \documentclass[a4paper]{article}
 \usepackage[margin=2cm]{geometry}
 
+\RequirePackage{luatex85}
+\def\pgfsysdriver{pgfsys-pdftex.def}
+
 \usepackage{fontspec}
 \usepackage[english]{babel} % Language 
 \usepackage{enumitem}
 \usepackage{listings}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\pgfplotsset{compat=1.14}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
@@ -88,6 +98,70 @@ The \texttt{gettimeofday()} function returns the seconds and microseconds since 
 	\item \textbf{Plot the speed-up obtained when varying the number of threads (strong scalability) and problem size (weak scalability) for \texttt{pi\_omp.c}. Reason about how the scalability of the program.}
 \end{enumerate}
 
+\begin{figure}[H]
+    \begin{minipage}[t]{0.5\linewidth}
+        \begin{tikzpicture}
+            \begin{axis}[
+                    xlabel = Threads,
+                    ylabel = Speed-up,
+                    xmin = 0, xmax = 13,
+                ]
+                \addplot table[x=Threads,y=Speedup, col sep = semicolon] {speedup_strong.dat};
+                \addplot+ [mark=none, dashed, domain = {1:12}] {x};
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Speedup strong}
+        \label{fig:speedup_strong}
+    \end{minipage}
+    \begin{minipage}[t]{0.5\linewidth}
+        \begin{tikzpicture}
+            \begin{axis}[
+                    xlabel = Threads,
+                    ylabel = Speed-up,
+                    xmin = 0, xmax = 13,
+                    ymin = 0, ymax = 1.1,
+                ]
+                \addplot table[x=Threads,y=Speedup, col sep = semicolon]{speedup_weak.dat};
+                \addplot+ [mark=none, dashed, domain ={1:12}]{1};
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Speedup weak}
+        \label{fig:speedup_weak}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{minipage}[t]{0.5\linewidth}
+        \begin{tikzpicture}
+            \begin{axis}[
+                    xlabel = Threads,
+                    ylabel = Speed-up,
+                    xmin = 0, xmax = 13,
+                ]
+                \addplot table[x=Threads,y=Time, col sep = semicolon] {time_strong.dat};
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Time strong}
+        \label{fig:time_strong}
+    \end{minipage}
+    \begin{minipage}[t]{0.5\linewidth}
+        \begin{tikzpicture}
+            \begin{axis}[
+                    xlabel = Threads,
+                    ylabel = Speed-up,
+                    xmin = 0, xmax = 13,
+                ]
+                \addplot table[x=Threads,y=Time, col sep = semicolon]{time_weak.dat};
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Time weak}
+        \label{fig:time_weak}
+    \end{minipage}
+\end{figure}
+
+
+As it can be seen in the graphics there's always an overhead for creating and destroying the threads. Ideally the speedup in the \autoref{fig:speedup_strong} should be $y = x$ but instead there is not. Moreover, this is more obvious in the \autoref{fig:speedup_weak} the speedup should be $1$ but it decreases as the number of threads increase.
+
 \section*{Visualizing the task graph and data dependences}
 
 \begin{enumerate}[resume]
@@ -106,19 +180,45 @@ The \texttt{gettimeofday()} function returns the seconds and microseconds since 
 
 \begin{center}
 	\begin{tabular}{l|rrr}
-		Version & $T_1(ms)$ & $T_{\infty}$ & Parallelism \\
+		Version & $T_1(ms)$ & $T_{\infty}(ms)$ & Parallelism \\
 		\hline
-		seq & 593 & 593 & \\
-		v1 & 593 & & \\
-		v2 & 593 & & \\
-		v3 & 593 & & \\
-		v4 & 593 & & 
+		seq & 593 & 593 & 1 \\
+		v1 & 593 & 593 & 1 \\
+		v2 & 593 & 315 & 1,88 \\
+		v3 & 593 & 108 & 5,49 \\
+		v4 & 593 & 59 & 10
 	\end{tabular}
 \end{center}
 
 \begin{enumerate}[resume]
 	\item \textbf{With the results from parallel simulation with 2, 4, 8, 16 and 32 processors, draw the execution time and speedup plots for version v4 with respect to the sequential execution (that you can estimate from the simulation of the initial task decomposition that we provided in \texttt{3dfft\_seq.c}, using just 1 processor). Briefly comment the scalability behavior shown on these two plots.}
 \end{enumerate}
+
+\begin{center}
+    \begin{tabular}{l|rrrrr}
+        Processors & 2 & 4 & 8 & 16 & 32 \\
+        \hline
+        Time (ms) & 297 & 156 & 87 & 59 & 59
+    \end{tabular}
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{semilogxaxis}[
+                xlabel = { Processors },
+                ylabel = { Time (ms) },
+                xmin = 0, xmax = 34,
+                ymin = 0, ymax = 310,
+                xtick = {2, 4, 8, 16, 32},
+                log ticks with fixed point
+            ]
+            \addplot[color=blue,mark=*] coordinates {
+                (2,297)(4,156)(8, 87)(16,59)(32,59)
+            };
+        \end{semilogxaxis}
+    \end{tikzpicture}
+\end{figure}
 
 \section*{Tracing sequential and parallel execution}
 
