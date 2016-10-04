@@ -1,0 +1,74 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=2cm]{geometry}
+
+\usepackage{fontspec}
+\usepackage[english]{babel} % Language 
+\usepackage{enumitem}
+
+\title{
+	\textsc{PAR: Laboratory 1} \\
+	\texttt{\large par4201}
+	}
+	
+\author{Joan Marcè i Igual \and Esteve Tarragó i Sanchís}
+
+\begin{document}
+
+\maketitle
+
+\section*{Node architecture and memory}
+
+\begin{enumerate}
+	\item \textbf{Draw and briefly describe the architecture of the computer in which you are doing this lab session (number of sockets, cores per socket, threads per core, cache hierarchy size and sharing and amount of main memory).}
+\end{enumerate}
+
+\section*{Timing sequential and parallel executions}
+
+\begin{enumerate}[resume]
+	\item \textbf{Describe what do you need to add to your program to measure elapsed execution time between a pair of points in the program, clearly indicating the library header file that needs to be included, the library functions that need to be invoked and the data structure and its fields.}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Plot the speed-up obtained when varying the number of threads (strong scalability) and problem size (weak scalability) for \texttt{pi\_omp.c}. Reason about how the scalability of the program.}
+\end{enumerate}
+
+\section*{Visualizing the task graph and data dependences}
+
+\begin{enumerate}[resume]
+	\item \textbf{Include the source code for function \texttt{dot\_product} in which you show the \textit{Tareador} instrumentation that has been added to study the potential parallelism in the code. This instrumentation has to appropriately define tasks and filter the analysis of variable(s) that cause dependence(s).}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Capture the task dependence graph for that task decomposition and the execution timelines (for 8 processors) that allow you to understand the potential parallelism attainable. Briefly comment the relevant information that is reported by the tools.}
+\end{enumerate}
+
+\section*{Analysis of task decompositions}
+
+\begin{enumerate}[resume]
+	\item \textbf{Complete the following table for the initial and different versions generated for \texttt{3dfft\_seq}, briefly commenting the evolution of the metrics with the different versions.}
+\end{enumerate}
+
+\begin{tabular}{l|rrr}
+	Version & $T_1$ & $T_{\infty}$ & Parallelism \\
+	seq & & & \\
+	v1 & & & \\
+	v2 & & & \\
+	v3 & & & \\
+	v4 & & & 
+\end{tabular}
+
+\begin{enumerate}[resume]
+	\item \textbf{With the results from parallel simulation with 2, 4, 8, 16 and 32 processors, draw the execution time and speedup plots for version v4 with respect to the sequential execution (that you can estimate from the simulation of the initial task decomposition that we provided in \texttt{3dfft\_seq.c}, using just 1 processor). Briefly comment the scalability behavior shown on these two plots.}
+\end{enumerate}
+
+\section*{Tracing sequential and parallel execution}
+
+\begin{enumerate}[resume]
+	\item \textbf{From the instrumented version of \texttt{pi\_seq.c}, and using the appropriate \texttt{Paraver} configuration file, obtain the value \textit{parallel fraction} $\phi$ for this program when executed with 100.000.000 iterations, showing the steps you followed to obtain it.}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{From the instrumented version of \texttt{pi\_omp.c}, and using the appropriate \texttt{Paraver} configuration file, show a profile of the \% of time spent in the different OpenMP states when using 8 threads and for 100.000.000 iterations. Draw your own conclusions from that profile.}
+\end{enumerate}
+
+\end{document}
