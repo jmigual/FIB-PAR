@@ -25,7 +25,10 @@
     keywordstyle=\color{blue},      % keyword style
     commentstyle=\color{OliveGreen},   % comment style
     stringstyle=\color{purple}, 
-    tabsize=4
+    tabsize=4,
+    frame=single,
+    numbers=left,                   % where to put the line-numbers
+    numberstyle=\tiny\color{gray},  % the style that is used for the line-numbers
 }
 
 \title{
@@ -131,7 +134,7 @@ The \texttt{gettimeofday()} function returns the seconds and microseconds since 
 \end{figure}
 
 \begin{figure}[H]
-    \begin{minipage}[t]{0.5\linewidth}
+    \begin{minipage}[t]{0.49\linewidth}
         \begin{tikzpicture}
             \begin{axis}[
                     xlabel = Threads,
@@ -144,7 +147,7 @@ The \texttt{gettimeofday()} function returns the seconds and microseconds since 
         \caption{Time strong}
         \label{fig:time_strong}
     \end{minipage}
-    \begin{minipage}[t]{0.5\linewidth}
+    \begin{minipage}[t]{0.49\linewidth}
         \begin{tikzpicture}
             \begin{axis}[
                     xlabel = Threads,
@@ -167,10 +170,31 @@ As it can be seen in the graphics there's always an overhead for creating and de
 \begin{enumerate}[resume]
 	\item \textbf{Include the source code for function \texttt{dot\_product} in which you show the \textit{Tareador} instrumentation that has been added to study the potential parallelism in the code. This instrumentation has to appropriately define tasks and filter the analysis of variable(s) that cause dependence(s).}
 \end{enumerate}
+% {6,9,25,27,29,31,35,37}
+\lstinputlisting[language=C, title=\lstname]{dot_product.c}
+
+Thanks to \texttt{Tareador} we could see there was a strong dependency caused by the variable \texttt{result}. That’s why we disable it for the analysis.
 
 \begin{enumerate}[resume]
 	\item \textbf{Capture the task dependence graph for that task decomposition and the execution timelines (for 8 processors) that allow you to understand the potential parallelism attainable. Briefly comment the relevant information that is reported by the tools.}
 \end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{image03}
+    \caption{Tareador nodes}
+    \label{fig:tareador_nodes}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{image02}
+    \caption{Tareador execution timeline}
+    \label{fig:tareador_timeline}
+\end{figure}
+
+This tool allow us to calculate the critical path of a parallel program given a task decomposition. It also helps us to see dependencies between task so we can reduce them by protecting variables.
+
+It’s also useful if we want to anticipate what will be our speed up with N processors because we can see which task will be assigned to each processor and when will all the processors finish.
 
 \section*{Analysis of task decompositions}
 
@@ -226,8 +250,42 @@ As it can be seen in the graphics there's always an overhead for creating and de
 	\item \textbf{From the instrumented version of \texttt{pi\_seq.c}, and using the appropriate \texttt{Paraver} configuration file, obtain the value \textit{parallel fraction} $\phi$ for this program when executed with 100.000.000 iterations, showing the steps you followed to obtain it.}
 \end{enumerate}
 
+We executed the program in a separate node with \verb|> qsub -l execution ./submit-seq-i.sh| and then we obtained the \verb|.prv| file that we opened with Paraver. Then we were able to obtain the execution times.
+
+$$
+\phi = \frac{parallel}{parallel + serial} = \frac{788398}{21417,136 + 788398,214} = 0,99997826526
+$$
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{image01}
+    \caption{Paraver statistics}
+\end{figure}
+
 \begin{enumerate}[resume]
 	\item \textbf{From the instrumented version of \texttt{pi\_omp.c}, and using the appropriate \texttt{Paraver} configuration file, show a profile of the \% of time spent in the different OpenMP states when using 8 threads and for 100.000.000 iterations. Draw your own conclusions from that profile.}
 \end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{image04}
+    \caption{Paraver omp statistics}
+\end{figure}
+
+\begin{itemize}
+    \item Total running time: $526,32\%$
+    \item Time not being created: $110\%$
+    \item Time not synchronizing: $157,97\%$
+    \item Time scheduling and fork/join: $2,68\%$
+    \item I/O Time: $0,4\%$
+\end{itemize}
+
+\begin{itemize}
+    \item Total running time: $196,721,828ns$
+    \item Theoretical speedup: $ \frac{Serial + Parallel}{Serial + \frac{1}{8}Parallel} = 7,9988 $
+    \item Real speedup: $\frac{Total serial}{Total Parallel} = 4.2082 $
+\end{itemize}
+
+As we can see the real speedup is less inferior than the theoretical speedup. This is due to the time lost in the synchronization and the fork/join process. The synchronization time takes about $159.97\%$ of CPU time which is about $19.996\%$ of the execution time.
 
 \end{document}
