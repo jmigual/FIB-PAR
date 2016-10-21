@@ -1,0 +1,165 @@
+\documentclass[a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage[english]{babel} % Language 
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\title{
+	\textsc{PAR: Laboratory 1} \\
+	\texttt{\large par4201}
+}
+
+\author{Joan Marcè i Igual \and Esteve Tarragó i Sanchís}
+
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{OpenMP questionnaire}
+
+When answering to the questions in this questionnaire, please DO NOT simply answer with yes, no or a number; try to minimally justify all your answers. Sometimes you may need to execute several times in order to see the effect of data races in the parallel execution.
+
+\subsection{Basics}
+
+\subsubsection{\texttt{1.hello.c}}
+
+\begin{enumerate}
+	\item \textbf{How many times will you see the \texttt{"Hello world!"} message if the program is executed with \texttt{"./1.hello"}?}
+\end{enumerate}
+
+We will se 24 times \texttt{"Hello world!"}, one for each thread.
+
+\begin{enumerate}[resume]
+	\item \textbf{Without changing the program, how to make it to print 4 times the \texttt{"Hello World!"} message?}
+\end{enumerate}
+
+\subsubsection{\texttt{2.hello.c}}
+
+\begin{enumerate}
+	\item \textbf{Is the execution of the program correct? (i.e., prints a sequence of \texttt{"(Thid) HEllo (Thid) world!"} being \texttt{Thid} the thread identifier). Which data sharing clause should be added to make it correct?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Are the lines always printed in the same order? Could the messages appear intermixed?}
+\end{enumerate}
+
+\subsubsection{\texttt{3.how\_many.c}}
+
+\begin{enumerate}
+	\item \textbf{How many \texttt{"Hello world ..."} lines are printed on the screen?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{If the \texttt{if(0)} clause is commented in the last parallel directive, how many \texttt{"Hello world ..."} lines are printed on the screen?}
+\end{enumerate}
+
+\subsubsection{\texttt{4.data\_sharing.c}}
+
+\begin{enumerate}
+	\item \textbf{Which is the value of variable \texttt{x} after the execution of each parallel region with different data-sharing attribute (\texttt{shared}, \texttt{private} and \texttt{firstprivate})?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{What needs to be changed/added/removed in the first directive to ensure taht the value after the first parallel is always 8?}
+\end{enumerate}
+
+\subsubsection{\texttt{5.parallel.c}}
+
+\begin{enumerate}
+	\item \textbf{How many messages the program prints? Which iterations is each thread executing?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{What needs to be changed in the directive to ensure that each thread executes the appropriate iterations?}
+\end{enumerate}
+
+\subsubsection{\texttt{6.datarace.c}}
+
+\begin{enumerate}
+	\item \textbf{Is the program always executing correctly?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Add two alternative directive to make it correct. Which are these directives?}
+\end{enumerate}
+
+\subsubsection{\texttt{7.barrier.c}}
+
+\begin{enumerate}
+	\item \textbf{Can you predict the sequence of messages in this program? Do threads exit from the barrier in any specific order?}
+\end{enumerate}
+
+
+\subsection{Worksharing}
+\subsubsection{\texttt{1.for.c}}
+
+\begin{enumerate}
+	\item \textbf{Howm any iterations from the first loop are executed by each thread?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{How many iterations from the second loop are executed by each thread?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Which directive should be added so that the first \texttt{printf} is executed only once by the first thread that finds it?}
+\end{enumerate}
+
+\subsubsection{\texttt{2.schedule.c}}
+
+\begin{enumerate}
+	\item \textbf{Which iterations of the loops are executed by each thread for each \texttt{schedule} kind?}
+\end{enumerate}
+
+\subsubsection{\texttt{3.nowait.c}}
+
+\begin{enumerate}
+	\item \textbf{How does the sequence of \texttt{printf} change if \texttt{nowait} clause is removed from the first \texttt{for} directive?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{If the \texttt{nowait} clause is removed in the seconde \texttt{for} directive, will you observe any difference?}
+\end{enumerate}
+
+\subsubsection{\texttt{4.collapse.c}}
+\begin{enumerate}
+	\item \textbf{Which iterations of the loop are executed by each thread when the \texttt{collapse} clause is used?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Is the execution correct if the \texttt{collapse} clause is removed? Which clause (different than \texttt{collapse}) should be added to make it correct?}
+\end{enumerate}
+
+\subsection{Tasks}
+\subsubsection{\texttt{1.serial.c}}
+
+\begin{enumerate}
+	\item \textbf{Is the code printing what you expect? Is it executing in parallel?}
+\end{enumerate}
+
+\subsubsection{\texttt{2.parallel.c}}
+\begin{enumerate}
+	\item \textbf{Is the code printing what you expect? What is wrong with it?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Which directive should be added to make its execution correct?}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{What would happen if the \texttt{firstprivate} clause is removed from the task directive? And if teh \texttt{firstprivate}}
+\end{enumerate}
+
+
+
+
+\end{document}
