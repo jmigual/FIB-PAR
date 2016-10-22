@@ -12,6 +12,7 @@
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{multirow}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
@@ -292,18 +293,70 @@ This directive tells to only one thread execute this code.
 	\item \textbf{How does the sequence of \texttt{printf} change if \texttt{nowait} clause is removed from the first \texttt{for} directive?}
 \end{enumerate}
 
+The second loop is never executed before all threads have finished the first loop. This causes that all the \verb|Loop 1| mesages are printed before all the \verb|Loop 2| messages.
+
 \begin{enumerate}[resume]
 	\item \textbf{If the \texttt{nowait} clause is removed in the seconde \texttt{for} directive, will you observe any difference?}
 \end{enumerate}
+
+No it won't since after the \verb|parallel| directive finishes all threads wait to syncronize.
 
 \subsubsection{\texttt{4.collapse.c}}
 \begin{enumerate}
 	\item \textbf{Which iterations of the loop are executed by each thread when the \texttt{collapse} clause is used?}
 \end{enumerate}
 
+\begin{table}[H]
+	\centering
+	\begin{tabular}{crr}
+		Thread ID & \verb|i| & \verb|j| \\
+		\hline
+		\multirow{4}{*}{0} & 0 & 0 \\
+		& 0 & 1 \\
+		& 0 & 2 \\
+		& 0 & 3 \\
+		\hline
+		\multirow{3}{*}{1} & 0 & 4 \\
+		& 1 & 0 \\
+		& 1 & 1 \\
+		\hline
+		\multirow{3}{*}{2} & 1 & 2 \\
+		& 1 & 3 \\
+		& 1 & 4 \\
+		\hline
+		\multirow{3}{*}{3} & 2 & 0 \\
+		& 2 & 1 \\
+		& 2 & 2 \\
+		\hline
+		\multirow{3}{*}{4} & 2 & 3 \\
+		& 2 & 4 \\
+		& 3 & 0 \\
+		\hline
+		\multirow{3}{*}{5} & 3 & 1 \\
+		& 3 & 2 \\
+		& 3 & 3 \\
+		\hline
+		\multirow{3}{*}{6} & 3 & 4 \\
+		& 4 & 0 \\
+		& 4 & 1 \\
+		\hline
+		\multirow{3}{*}{7} & 4 & 2 \\
+		& 4 & 3 \\
+		& 4 & 4 \\
+	\end{tabular}
+\end{table}
+
 \begin{enumerate}[resume]
 	\item \textbf{Is the execution correct if the \texttt{collapse} clause is removed? Which clause (different than \texttt{collapse}) should be added to make it correct?}
 \end{enumerate}
+
+No, the execution is not correct because the variable \verb|j| becomes shared and there will be conflicts.
+
+To make it correct then the following clause needs to be added before the nested \verb|for|:
+
+\begin{lstlisting}[language=C]
+#pragma omp parallel for
+\end{lstlisting}
 
 \subsection{Tasks}
 \subsubsection{\texttt{1.serial.c}}
@@ -312,26 +365,48 @@ This directive tells to only one thread execute this code.
 	\item \textbf{Is the code printing what you expect? Is it executing in parallel?}
 \end{enumerate}
 
+The code is printing what I expect but it's not executing in parallel because all the tasks are done in thread 0.
+
 \subsubsection{\texttt{2.parallel.c}}
 \begin{enumerate}
 	\item \textbf{Is the code printing what you expect? What is wrong with it?}
 \end{enumerate}
 
+The code is not printing what I expect because is not computing properly the Fibonacci number. 
+
 \begin{enumerate}[resume]
 	\item \textbf{Which directive should be added to make its execution correct?}
 \end{enumerate}
+
+After the following line:
+\begin{lstlisting}[language=C]
+#pragma omp parallel firstprivate(p) num_threads(4)
+\end{lstlisting}
+
+The following clause must be added:
+\begin{lstlisting}[language=C]
+#pragma omp single
+\end{lstlisting}
 
 \begin{enumerate}[resume]
 	\item \textbf{What would happen if the \texttt{firstprivate} clause is removed from the task directive? And if the \texttt{firstprivate} clause is ALSO removed from the \texttt{parallel} directive? Why are they redundant?}
 \end{enumerate}
 
+If we remove the \texttt{firstprivate} from the task directive the code works but if we remove the \texttt{firstprivate} from the parallel directive too then a segmentation fault is produced. 
+
+They are redundant because if you add \texttt{firstprivate} in the parallel directive by default the task directive adds the \texttt{firstprivate} option too.
+
 \begin{enumerate}[resume]
 	\item \textbf{Why the program breaks when variable \texttt{p} is not \texttt{firstprivate} to the task?}
 \end{enumerate}
 
+In the last iteration of the loop there are still threads doing the work but the thread controlling the while loop sets p to null and the other threads try to access to a null pointer.
+
 \begin{enumerate}[resume]
 	\item \textbf{Why the \texttt{firstprivate} clause was not needed in \texttt{1.serial.c}?}
 \end{enumerate}
+
+Because there was only one thread and there was no possible conflicts between different threads.
 
 \section{Parallelization overheads}
 
