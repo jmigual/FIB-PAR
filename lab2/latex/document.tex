@@ -1,4 +1,5 @@
 \documentclass[a4paper]{article}
+\usepackage[margin=2cm]{geometry}
 
 \usepackage{fontspec}
 \usepackage[english]{babel} % Language 
@@ -156,10 +157,52 @@ We will se 24 times \texttt{"Hello world!"}, one for each thread.
 \end{enumerate}
 
 \begin{enumerate}[resume]
-	\item \textbf{What would happen if the \texttt{firstprivate} clause is removed from the task directive? And if teh \texttt{firstprivate}}
+	\item \textbf{What would happen if the \texttt{firstprivate} clause is removed from the task directive? And if the \texttt{firstprivate} clause is ALSO removed from the \texttt{parallel} directive? Why are they redundant?}
 \end{enumerate}
 
+\begin{enumerate}[resume]
+	\item \textbf{Why the program breaks when variable \texttt{p} is not \texttt{firstprivate} to the task?}
+\end{enumerate}
 
+\begin{enumerate}[resume]
+	\item \textbf{Why the \texttt{firstprivate} clause was not needed in \texttt{1.serial.c}?}
+\end{enumerate}
 
+\section{Parallelization overheads}
+
+\begin{enumerate}
+	\item \textbf{Which is the order of magnitude for the overhead associated with \texttt{parallel} region(fork and join) in \texttt{OpenMP}? Is it constant? Reason the answer based on the results reported by the \texttt{pi\_omp\_overhead.c} code.}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Which is the order of magnitude for the overhead associated with the execution of \texttt{critical} regions in \texttt{OpenMP}? How is this overhead decomposed? How and why does the overhead associated with \texttt{critical} increase with the number of processors? Identify at least three reasons that justify the observed performance degradation. Base your answers on the execution times reported by the \texttt{pi\_omp.c} and \texttt{pi\_omp\_critical.c} programs and their \texttt{Paraver} execution traces.}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{Which is the order of magnitude for the overhead associated with the execution of \texttt{atomic} memory accesses in \texttt{OpenMP}? How and why does the overhead associated with \texttt{atomic} increase with the number of processors? Reason the answers based on the execution times reported by the \texttt{pi\_omp.c} and \texttt{pi\_omp\_atomic.} programs.}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{In the presence of false sharing (as it happens in \texttt{pi\_omp\_sumvector.c}), which is the additional average time for each individual access to memory that you observe? What is causing this increase in the memory access time? Reason the answers based on the execution times reported by the \texttt{pi\_omp\_sumvector.c} and \texttt{pi\_omp\_padding.c} programs. Explain how padding is done in \texttt{pi\_omp\_padding.c}.}
+\end{enumerate}
+
+\begin{enumerate}[resume]
+	\item \textbf{ Complete the following table with the execution times of the different versions for the computation of Pi that we provide to you in this first laboratory assignment when executed with 100.000.000 iterations. The speed–up has to be computed with respect to the execution of the serial version. For each version and number of threads, how many executions have you performed? }
+\end{enumerate}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{l|rrr}
+		\textbf{Version} & \textbf{1 processor} & \textbf{8 processors} & \textbf{speed-up} \\
+		\hline
+		\verb|pi_seq.c| & & - & 1 \\
+		\verb|pi_omp.c| (sumlocal) & & & \\
+		\verb|pi_omp_critical.c| & & & \\
+		\verb|pi_omp_lock.c| & & & \\
+		\verb|pi_omp_atomic.c|  & & & \\
+		\verb|pi_omp_sumvector.c| & & & \\
+		\verb|pi_omp_padding.c| & & & \\
+	\end{tabular}
+\end{table}
 
 \end{document}
