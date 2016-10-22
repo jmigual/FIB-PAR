@@ -11,6 +11,21 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{tikz}
 \usepackage{pgfplots}
+\usepackage[dvipsnames]{xcolor}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+
+\lstset{
+	basicstyle=\ttfamily,
+	showspaces=false,
+	showstringspaces=false,
+	tabsize=4,
+	stringstyle=\color{orange},
+	commentstyle=\color{OliveGreen},
+	keywordstyle=\color{blue},
+	numberstyle=\color{Gray}
+}
 
 \title{
 	\textsc{PAR: Laboratory 1} \\
@@ -24,6 +39,7 @@
 
 \maketitle
 \tableofcontents
+\pagebreak
 
 \section{OpenMP questionnaire}
 
@@ -43,15 +59,23 @@ We will se 24 times \texttt{"Hello world!"}, one for each thread.
 	\item \textbf{Without changing the program, how to make it to print 4 times the \texttt{"Hello World!"} message?}
 \end{enumerate}
 
+Adding the following environment variable:
+
+\verb|export OMP_NUM_THREADS=4|
+
 \subsubsection{\texttt{2.hello.c}}
 
 \begin{enumerate}
-	\item \textbf{Is the execution of the program correct? (i.e., prints a sequence of \texttt{"(Thid) HEllo (Thid) world!"} being \texttt{Thid} the thread identifier). Which data sharing clause should be added to make it correct?}
+	\item \textbf{Is the execution of the program correct? (i.e., prints a sequence of \texttt{"(Thid) Hello (Thid) world!"} being \texttt{Thid} the thread identifier). Which data sharing clause should be added to make it correct?}
 \end{enumerate}
+
+No, the execution is not correct because the variable \verb|id| is global and gets overwritten by each thread.
 
 \begin{enumerate}[resume]
 	\item \textbf{Are the lines always printed in the same order? Could the messages appear intermixed?}
 \end{enumerate}
+
+No because the thread execution is not sequential and between two \verb|printf| calls from one thread another one can make its \verb|printf| call.
 
 \subsubsection{\texttt{3.how\_many.c}}
 
@@ -59,9 +83,46 @@ We will se 24 times \texttt{"Hello world!"}, one for each thread.
 	\item \textbf{How many \texttt{"Hello world ..."} lines are printed on the screen?}
 \end{enumerate}
 
+\begin{lstlisting}[language=C]
+//8 times
+#pragma omp parallel
+printf("Hello world from the first parallel!\n");
+
+omp_set_num_threads(2);
+
+//2 times
+#pragma omp parallel
+printf("Hello world from the second parallel!\n");
+
+//3 times
+#pragma omp parallel num_threads(3)
+printf("Hello world from the third parallel!\n");
+
+//2 times
+#pragma omp parallel
+printf("Hello world from the fourth  parallel!\n");
+
+srand(time(0));
+
+//1 time
+#pragma omp parallel num_threads(rand()%4+1) if(0) 
+printf("Hello world from the fifth parallel!\n");
+
+// Total: 16 times
+\end{lstlisting}
+
 \begin{enumerate}[resume]
 	\item \textbf{If the \texttt{if(0)} clause is commented in the last parallel directive, how many \texttt{"Hello world ..."} lines are printed on the screen?}
 \end{enumerate}
+
+If the \verb|if(0)| is removed then the last directive:
+\begin{lstlisting}[language=C]
+#pragma omp parallel num_threads(rand()%4+1) 
+printf("Hello world from the fifth parallel!\n");
+\end{lstlisting}
+
+will print between 1 and 4 lines so the number of lines printed will be
+between 16 and 19 lines.
 
 \subsubsection{\texttt{4.data\_sharing.c}}
 
@@ -69,28 +130,98 @@ We will se 24 times \texttt{"Hello world!"}, one for each thread.
 	\item \textbf{Which is the value of variable \texttt{x} after the execution of each parallel region with different data-sharing attribute (\texttt{shared}, \texttt{private} and \texttt{firstprivate})?}
 \end{enumerate}
 
+\begin{lstlisting}[language=C]
+omp_set_num_threads(8);
+
+int x = 0;
+#pragma omp parallel shared(x)
+{
+	x++;
+}
+// Normally 8 but it may change if there are collisions
+printf("After first parallel (shared) x is: %d\n",x);
+
+x = 0;
+#pragma omp parallel private(x)
+{	 
+	x++;
+}
+// Always 0 since each thread does not modify 
+// the x outside its code
+printf("After second parallel (private) x is: %d\n",x);
+
+x = 0;
+#pragma omp parallel firstprivate(x)
+{
+	x++;
+}
+// Always 0 since each thread does not modify 
+// the x outside its code too
+printf("After third  parallel (first private) x is: %d\n",x);
+\end{lstlisting}
+
 \begin{enumerate}[resume]
 	\item \textbf{What needs to be changed/added/removed in the first directive to ensure taht the value after the first parallel is always 8?}
 \end{enumerate}
 
-\subsubsection{\texttt{5.parallel.c}}
+The following line needs to be changed:
+\begin{lstlisting}[language=C]
+#pragma omp parallel shared(x)
+\end{lstlisting}
 
+to the following value:
+\begin{lstlisting}[language=C]
+#pragma omp parallel reduction(+:x)
+\end{lstlisting}
+
+\subsubsection{\texttt{5.parallel.c}}
 \begin{enumerate}
 	\item \textbf{How many messages the program prints? Which iterations is each thread executing?}
 \end{enumerate}
+
+The number of messages depends on the trace execution. The iteration each thread is executing depends on the trace too. This is caused because the \verb|i| variable is shared between all the threads.
 
 \begin{enumerate}[resume]
 	\item \textbf{What needs to be changed in the directive to ensure that each thread executes the appropriate iterations?}
 \end{enumerate}
 
-\subsubsection{\texttt{6.datarace.c}}
+The following line needs to be changed:
+\begin{lstlisting}[language=C]
+#pragma omp parallel num_threads(NUM_THREADS)
+\end{lstlisting}
 
+to the following value:
+\begin{lstlisting}[language=C]
+#pragma omp parallel private(i) num_threads(NUM_THREADS)
+\end{lstlisting}
+
+\subsubsection{\texttt{6.datarace.c}}
 \begin{enumerate}
 	\item \textbf{Is the program always executing correctly?}
 \end{enumerate}
 
+No, sometimes the execution fails because \verb|x| is not equal to \verb|N| due to the variable being shared.
+
 \begin{enumerate}[resume]
 	\item \textbf{Add two alternative directive to make it correct. Which are these directives?}
+\end{enumerate}
+
+\begin{enumerate}[label=\roman*)]
+	\item Change the following line:
+	\begin{lstlisting}[language=C]
+#pragma omp parallel private(i)
+	\end{lstlisting}
+	
+	to the following value:
+	\begin{lstlisting}[language=C]
+#pragma omp parallel private(i) reduction(+:x)
+	\end{lstlisting}
+	
+	\item The second option is to make a part of the code atomic by adding:
+	\begin{lstlisting}[language=C]
+#pragma omp atomic
+x++;
+	\end{lstlisting}
 \end{enumerate}
 
 \subsubsection{\texttt{7.barrier.c}}
@@ -99,27 +230,61 @@ We will se 24 times \texttt{"Hello world!"}, one for each thread.
 	\item \textbf{Can you predict the sequence of messages in this program? Do threads exit from the barrier in any specific order?}
 \end{enumerate}
 
+The order of the first 4 messages can't be predicted because all the threads are active and there's no way to tell which will be the first to print a message.
+
+After that, the thread with \verb|id = 0| will print \verb|"(0) wakes up and enters barrier..."| and then all the threads ordered by \verb|id| will print this message until all threads are awake.
+
+Finally all threads will print \verb|(x) We are all awake!"| in an undeterministic order since all the threads are active.
 
 \subsection{Worksharing}
 \subsubsection{\texttt{1.for.c}}
 
 \begin{enumerate}
-	\item \textbf{Howm any iterations from the first loop are executed by each thread?}
+	\item \textbf{How many iterations from the first loop are executed by each thread?}
 \end{enumerate}
+
+Each thread executes 2 iterations since the compiler distributes the 16 iterations statically between the 8 threads.
 
 \begin{enumerate}[resume]
 	\item \textbf{How many iterations from the second loop are executed by each thread?}
 \end{enumerate}
 
+The first 3 threads execute 3 iterations and the other threads execute 2 iterations each one. This is because now there are 19 iterations and \verb|OpenMP| distributes this iterations between the 8 threads too.
+
 \begin{enumerate}[resume]
 	\item \textbf{Which directive should be added so that the first \texttt{printf} is executed only once by the first thread that finds it?}
 \end{enumerate}
+
+The following line needs to be added:
+\begin{lstlisting}[language=C]
+#pragma omp single
+\end{lstlisting}
+This directive tells to only one thread execute this code.
 
 \subsubsection{\texttt{2.schedule.c}}
 
 \begin{enumerate}
 	\item \textbf{Which iterations of the loops are executed by each thread for each \texttt{schedule} kind?}
 \end{enumerate}
+
+\begin{lstlisting}[language=C]
+// Each thread executes 4 consecutive iterations
+#pragma omp for schedule(static)
+
+// Each thread executes 2 chunks of 2 consecutive iterations
+#pragma omp for schedule(static, 2)
+
+// Each thread executes chunks of 2 iterations and then requests 
+// another chunk. So the number of thread iterations depends 
+// in the execution.
+#pragma omp for schedule(dynamic,2)
+
+
+// Each thread executes chunks of at least 2 iterations and 
+// then requests another chunk. The number of thread iterations 
+// depends in the execution too.
+#pragma omp for schedule(guided,2)
+\end{lstlisting}
 
 \subsubsection{\texttt{3.nowait.c}}
 
