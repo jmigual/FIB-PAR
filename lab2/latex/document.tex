@@ -1,6 +1,8 @@
 \documentclass[a4paper]{article}
 \usepackage[margin=2cm]{geometry}
 
+\def\pgfsysdriver{pgfsys-pdftex.def}
+
 \usepackage{fontspec}
 \usepackage[english]{babel} % Language 
 \usepackage{enumitem}
@@ -13,6 +15,7 @@
 \usepackage{pgfplots}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{multirow}
+\usepackage{caption}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
@@ -420,9 +423,80 @@ The overhead time is about 0,2 microseconds of the execution time and tends to b
 	\item \textbf{Which is the order of magnitude for the overhead associated with the execution of \texttt{critical} regions in \texttt{OpenMP}? How is this overhead decomposed? How and why does the overhead associated with \texttt{critical} increase with the number of processors? Identify at least three reasons that justify the observed performance degradation. Base your answers on the execution times reported by the \texttt{pi\_omp.c} and \texttt{pi\_omp\_critical.c} programs and their \texttt{Paraver} execution traces.}
 \end{enumerate}
 
+The order of magnitude is about 2 s per thread per 100 000 000 iterations. 
+
+There is a lot of overhead due to the critical region. With one thread the seq time was 0.79s compared to the critical one that was 1.83s for making the same task (so 1.04s of overhead 57% of the time).  
+
+With 8 threads the total time increased a lot in the critical program, it was 22.94 s which shows that the overhead increase with the number of threads. We would expect the program to run in less time with more threads but happens the opposite way due to overhead.
+
+The sequential code does not benefit from the increment of threads and it’s time remains the same.
+
+The overhead time is increasing more than linary cause the overhead per thread increased when the number of processor increased. That’s caused by synchronization among threads.
+
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{l|rrrr}
+        \parbox{2.5cm}{100.000.000 iterations times} & \verb|Seq| & \verb|Critical| & Overhead & \parbox{2cm}{\raggedleft Overhead per thread} \\
+        \hline
+        1 thread & 0,79 & 1,83 & 1,04 & 1,04 \\
+        8 threads & 0,79 & 22,94 & 22,15 & 2,77
+    \end{tabular}
+\end{table}
+
+The following images show \verb|paraver| results under 100.000 iterations with \verb|pi_omp_critical| with one and eight threads.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/image00}
+    \caption{Lock with 1 thread}
+    \label{fig:image00}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/image01}
+    \caption{Lock with 8 threads}
+    \label{fig:image01}
+\end{figure}
+
+\autoref{fig:image00} and \autoref{fig:image01} images show us the the percentage of the time that threads are locked. As we were expecting the executions with 8 threads has a lower unlocked time than the one with 1 thread.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/image02}
+    \caption{Profile with 1 thread}
+    \label{fig:image02}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/image03}
+    \caption{Profile with 8 threads}
+    \label{fig:image03}
+\end{figure}
+
+\autoref{fig:image02} and \autoref{fig:image03} let us see the amount of time lost in synchronization compared to the running time. The relationship between the synchronization time and the running time with one thread is about 92\% compared with 8 threads about 563\% which show us where is a big part of the overhead.
+
+Another reason for the overhead is the scheduling and Fork/Join region than for making the same task with one thread is 1820 times faster than with 8 threads.
+
 \begin{enumerate}[resume]
 	\item \textbf{Which is the order of magnitude for the overhead associated with the execution of \texttt{atomic} memory accesses in \texttt{OpenMP}? How and why does the overhead associated with \texttt{atomic} increase with the number of processors? Reason the answers based on the execution times reported by the \texttt{pi\_omp.c} and \texttt{pi\_omp\_atomic.} programs.}
 \end{enumerate}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{l|rrrrr}
+        \parbox{2.7cm}{100.000.000\\ iterations time (s)} &  \verb|paralel| & \verb|atomic| & Overheads & Overhead \% & \parbox{2cm}{\raggedleft Overhead per thread} \\
+        \hline
+        1 thread & 0,85 & 1,45 & 0,60 & 41\% & 0,90 \\
+        8 threads & 0,12 & 10,96 & 10,84 & 99\% & 1,36
+    \end{tabular}
+\end{table}
+
+The order of magnitude is about 1 s per thread per 100 000 000 iterations. 
+
+The overhead time is increasing more than linary cause the overhead per thread increased when the number of processor increased. That’s caused by synchronization among threads.
 
 \begin{enumerate}[resume]
 	\item \textbf{In the presence of false sharing (as it happens in \texttt{pi\_omp\_sumvector.c}), which is the additional average time for each individual access to memory that you observe? What is causing this increase in the memory access time? Reason the answers based on the execution times reported by the \texttt{pi\_omp\_sumvector.c} and \texttt{pi\_omp\_padding.c} programs. Explain how padding is done in \texttt{pi\_omp\_padding.c}.}
@@ -452,13 +526,13 @@ double sumvector[NUMTHRDS][CACHE_SIZE/sizeof(double)];
 	\begin{tabular}{l|rrr}
 		\textbf{Version} & \textbf{1 processor} & \textbf{8 processors} & \textbf{speed-up} \\
 		\hline
-		\verb|pi_seq.c| & 0,791969  & - & 1 \\
-		\verb|pi_omp.c| (sumlocal) & 0,793540 & 0,213562 & 3,71570  \\
-		\verb|pi_omp_critical.c| & 1,828075 & 1,828914 & 0,99954  \\
-		\verb|pi_omp_lock.c| & 1,794109 & 4,154377 & 0,43186  \\
-		\verb|pi_omp_atomic.c| & 1,442537 & 8,157299 & 0,17684  \\
-		\verb|pi_omp_sumvector.c| & 0,788829 & 0,652689 & 1,20860  \\
-		\verb|pi_omp_padding.c| & 0,793263 & 0,121814 & 6,51210  \\
+		\verb|pi_seq.c| & 0,79  & - & 1 \\
+		\verb|pi_omp.c| (sumlocal) & 0,79 & 0,21 & 3,72  \\
+		\verb|pi_omp_critical.c| & 1,83 & 22,94 & 0,08  \\
+		\verb|pi_omp_lock.c| & 1,79 & 4,15 & 0,43  \\
+		\verb|pi_omp_atomic.c| & 1,44 & 8,16 & 0,18  \\
+		\verb|pi_omp_sumvector.c| & 0,79 & 0,65 & 1,21  \\
+		\verb|pi_omp_padding.c| & 0,79 & 0,12 & 6,51  \\
 	\end{tabular}
 \end{table}
 
