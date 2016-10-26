@@ -414,6 +414,8 @@ Because there was only one thread and there was no possible conflicts between di
 	\item \textbf{Which is the order of magnitude for the overhead associated with \texttt{parallel} region(fork and join) in \texttt{OpenMP}? Is it constant? Reason the answer based on the results reported by the \texttt{pi\_omp\_overhead.c} code.}
 \end{enumerate}
 
+The overhead time is about 0,2 microseconds of the execution time and tends to be constant by thread. If we increase the number of threads the total overhead increases too.
+
 \begin{enumerate}[resume]
 	\item \textbf{Which is the order of magnitude for the overhead associated with the execution of \texttt{critical} regions in \texttt{OpenMP}? How is this overhead decomposed? How and why does the overhead associated with \texttt{critical} increase with the number of processors? Identify at least three reasons that justify the observed performance degradation. Base your answers on the execution times reported by the \texttt{pi\_omp.c} and \texttt{pi\_omp\_critical.c} programs and their \texttt{Paraver} execution traces.}
 \end{enumerate}
@@ -426,6 +428,21 @@ Because there was only one thread and there was no possible conflicts between di
 	\item \textbf{In the presence of false sharing (as it happens in \texttt{pi\_omp\_sumvector.c}), which is the additional average time for each individual access to memory that you observe? What is causing this increase in the memory access time? Reason the answers based on the execution times reported by the \texttt{pi\_omp\_sumvector.c} and \texttt{pi\_omp\_padding.c} programs. Explain how padding is done in \texttt{pi\_omp\_padding.c}.}
 \end{enumerate}
 
+This are the timings by 100.000 accesses:
+\begin{itemize}
+	\item \verb|pi_omp_sumvector.c|: 33.392.181ns
+	\item \verb|pi_omp_padding.c|: 39.000.423ns
+\end{itemize}
+
+The difference is 5.608.242ns which is about 56,082 ns of additional average time for each individual access to memory. This increase of access time can be caused by multiple cache misses because any cache level (neither level 3) will have the data cached which this implies reading 8 times (one for each thread) directly to the main memory.
+
+The padding is done by creating a \verb|sumvector| bigger than needed, this vector contains one block of the cache size to allow the thread to have its own block of the vector. This can bee seen in the following line:
+
+\begin{lstlisting}[language=C]
+double sumvector[NUMTHRDS][CACHE_SIZE/sizeof(double)];
+\end{lstlisting}
+
+
 \begin{enumerate}[resume]
 	\item \textbf{ Complete the following table with the execution times of the different versions for the computation of Pi that we provide to you in this first laboratory assignment when executed with 100.000.000 iterations. The speed–up has to be computed with respect to the execution of the serial version. For each version and number of threads, how many executions have you performed? }
 \end{enumerate}
@@ -435,14 +452,16 @@ Because there was only one thread and there was no possible conflicts between di
 	\begin{tabular}{l|rrr}
 		\textbf{Version} & \textbf{1 processor} & \textbf{8 processors} & \textbf{speed-up} \\
 		\hline
-		\verb|pi_seq.c| & & - & 1 \\
-		\verb|pi_omp.c| (sumlocal) & & & \\
-		\verb|pi_omp_critical.c| & & & \\
-		\verb|pi_omp_lock.c| & & & \\
-		\verb|pi_omp_atomic.c|  & & & \\
-		\verb|pi_omp_sumvector.c| & & & \\
-		\verb|pi_omp_padding.c| & & & \\
+		\verb|pi_seq.c| & 0,791969  & - & 1 \\
+		\verb|pi_omp.c| (sumlocal) & 0,793540 & 0,213562 & 3,71570  \\
+		\verb|pi_omp_critical.c| & 1,828075 & 1,828914 & 0,99954  \\
+		\verb|pi_omp_lock.c| & 1,794109 & 4,154377 & 0,43186  \\
+		\verb|pi_omp_atomic.c| & 1,442537 & 8,157299 & 0,17684  \\
+		\verb|pi_omp_sumvector.c| & 0,788829 & 0,652689 & 1,20860  \\
+		\verb|pi_omp_padding.c| & 0,793263 & 0,121814 & 6,51210  \\
 	\end{tabular}
 \end{table}
+
+To make this tests two executions have been performed.
 
 \end{document}
