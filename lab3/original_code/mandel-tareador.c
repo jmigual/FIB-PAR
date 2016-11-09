@@ -254,7 +254,8 @@ int main(int argc, char *argv[]) {
 #else
     if (fp != NULL)
     {
-        if(fwrite(output, sizeof(int), height*width, fp) != height*width) { 
+      for (int row = 0; row < height; ++row)
+        if(fwrite(output[row], sizeof(int), width, fp) != width) { 
 		fprintf(stderr, "Output file not written correctly\n"); 
 	}
     }
