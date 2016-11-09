@@ -89,8 +89,8 @@ void mandelbrot(int height,
 
 {
     /* Calculate points and save/display */
-    #pragma omp parallel for schedule(runtime) 
-    for (row = 0; row < height; ++row) {
+    #pragma omp parallel for collapse(2) schedule(runtime) 
+    for (row = 0; row < height; ++row) { 
         for (col = 0; col < width; ++col) {
             complex z, c;
 
@@ -120,6 +120,7 @@ void mandelbrot(int height,
             if (setup_return == EXIT_SUCCESS) {
                 #pragma omp critical
                 {
+                    //#pragma omp flush
                     XSetForeground (display, gc, color);
                     XDrawPoint (display, win, gc, col, row);
                 }
