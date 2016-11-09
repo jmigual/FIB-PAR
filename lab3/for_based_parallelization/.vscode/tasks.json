@@ -4,17 +4,15 @@
     "version": "0.1.0",
     "command": "make",
     "showOutput": "silent",
+    "isShellCommand": true,
     "tasks": [
         {
             "taskName": "build",
-            // Show the output window only if unrecognized errors occur.
-            "showOutput": "silent",
-            "problemMatcher": "$msCompile",
+            "isBuildCommand": true,
             "suppressTaskName": true
         },
         {
-            "taskName": "clean",
-            "showOutput": "silent"
+            "taskName": "clean"
         }
     ]
 }
