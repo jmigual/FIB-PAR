@@ -89,7 +89,7 @@ void mandelbrot(int height,
 
 {
     /* Calculate points and save/display */
-    #pragma omp for schedule(runtime)
+    #pragma omp parallel for schedule(runtime) 
     for (row = 0; row < height; ++row) {
         for (col = 0; col < width; ++col) {
             complex z, c;
@@ -256,7 +256,8 @@ int main(int argc, char *argv[]) {
 #else
     if (fp != NULL)
     {
-        if(fwrite(output, sizeof(int), height*width, fp) != height*width) { 
+      for (int row = 0; row < height; ++row)
+        if(fwrite(output[row], sizeof(int), width, fp) != width) { 
 		fprintf(stderr, "Output file not written correctly\n"); 
 	}
     }
