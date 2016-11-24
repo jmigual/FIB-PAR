@@ -4,9 +4,14 @@
 \usepackage{fontspec}					% utf-8 support
 \usepackage{enumitem}					% Continuous enumerations
 \usepackage{float}						% Floating images
+\usepackage[dvipsnames]{xcolor}			% Colors
 \usepackage{pgfplots}					% Custom plots
+\usepackage{listings}					% Code highlighting
 
 \pgfplotsset{compat=1.13}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
 
 \title{PAR: Laboratory 4 \\
 		\texttt{\large par4201}}
@@ -14,6 +19,8 @@
 
 \newenvironment{questionenum}
 {%
+\setlist[enumerate]{resume}
+\restartlist{enumerate}
 \newcommand{\question}[1]{
 \begin{enumerate}
 	\item\bfseries ##1
@@ -21,9 +28,17 @@
 }}{%
 }
 
-\newcommand{\seamusdefault}{\textbullet}
-\newcommand{\seamusx}{x}
-\newcommand{\seamusy}{y}
+\lstset{
+	basicstyle=\small\ttfamily,
+	showspaces=false,
+	showstringspaces=false,
+	tabsize=4,
+	stringstyle=\color{orange},
+	commentstyle=\color{OliveGreen},
+	keywordstyle=\color{blue},
+	numberstyle=\color{Gray},
+	frame=single
+}
 
 \begin{document}
 \maketitle
@@ -31,21 +46,85 @@
 
 \section{Analysis con Tareador}
 \begin{questionenum}
-	\question{Pepito}
+	\question{Include the relevant parts of the modified \texttt{multisort-tareador.c} code and comment where the calls to the Tareador API have been placed. Comment also about the task graph generated and the causes of the dependences that appear.}
+	
+	The following code contains the tasks created to analyze the task dependences in the \verb|merge| function.
+\begin{lstlisting}[language=C]
+void merge(long n, T left[n], T right[n], T result[n*2], long start, long length) {
+	if (length < MIN_MERGE_SIZE*2L) {
+		// Base case
+		tareador_start_task("basic_merge");
+		basicmerge(n, left, right, result, start, length);
+		tareador_end_task("basic_merge");
+	} else {
+		// Recursive decomposition
+		tareador_start_task("MergeRec1");
+		merge(n, left, right, result, start, length/2);
+		tareador_end_task("MergeRec1");
+		tareador_start_task("MergeRec2");
+		merge(n, left, right, result, start + length/2, length/2);
+		tareador_end_task("MergeRec2");
+	}
+}
+\end{lstlisting}
+
+	The following code contains the tasks created to analyze the task dependences in the \verb|multisort| function.
+	
+\begin{lstlisting}[language=C]
+void multisort(long n, T data[n], T tmp[n]) {
+	if (n >= MIN_SORT_SIZE*4L) {
+		// Recursive decomposition
+		tareador_start_task("Multisort1");
+		multisort(n/4L, &data[0], &tmp[0]);
+		tareador_end_task("Multisort1");
+		
+		tareador_start_task("Multisort2");
+		multisort(n/4L, &data[n/4L], &tmp[n/4L]);
+		tareador_end_task("Multisort2");
+		
+		tareador_start_task("Multisort3");
+		multisort(n/4L, &data[n/2L], &tmp[n/2L]);
+		tareador_end_task("Multisort3");
+		
+		tareador_start_task("Multisort4");
+		multisort(n/4L, &data[3L*n/4L], &tmp[3L*n/4L]);
+		tareador_end_task("Multisort4");
+		
+		tareador_start_task("Merge1");
+		merge(n/4L, &data[0], &data[n/4L], &tmp[0], 0, n/2L);
+		tareador_end_task("Merge1");
+		
+		tareador_start_task("Merge2");
+		merge(n/4L, &data[n/2L], &data[3L*n/4L], &tmp[n/2L], 0, n/2L);
+		tareador_end_task("Merge2");
+		
+		tareador_start_task("Merge3");
+		merge(n/2L, &tmp[0], &tmp[n/2L], &data[0], 0, n);
+		tareador_end_task("Merge3");
+	} else {
+		// Base case
+		tareador_start_task("Basicsort");
+		basicsort(n, data);
+		tareador_end_task("Basicsort");
+	}
+}
+\end{lstlisting}
+	
+	\question{Write a table with the execution time and speed-up predicted by \textit{Tareador} (for 1, 2, 4, 8, 16, 32 and 64 processors) for the task decomposition specified with Tareador. Are the results close to the ideal case? Reason about your answer.}
 \end{questionenum}
 
 \section{Parallelization and performance analysis with tasks}
+\begin{questionenum}
+	\question{Include the relevant portion of the codes that implement the two versions (\textit{Leaf} and \textit{Tree}), commenting whatever necessary.}
+	\question{For the the Leaf and Tree strategies, include the speedup (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed, including captures of Paraver windows to justify your explanations.}
+	\question{Analyze the inuence of the recursivity depth in the \textit{Tree} version, including the execution time plot, when changing the recursion depth and using 8 threads. Reason about the behavior observed. Is there an optimal value?}
+\end{questionenum}
 
+\section{Parallelization and performance analysis with dependent tasks}
+\begin{questionenum}
+	\question{Include the relevant portion of the code that implements the \textit{Tree} version with task dependencies, commenting whatever necessary.}
+	
+	\question{Reason about the performance that is observed, including the speedup plots that have been obtained different numbers of processors and with captures of Paraver windows to justify your reasoning.}
+\end{questionenum}
 
 \end{document}
-
-Include the relevant parts of the modified \texttt{multisort-tareador.c} code and comment where the calls to the Tareador API have been placed. Comment also about the task graph generated and the causes of the dependences that appear.
-\item Write a table with the execution time and speed-up predicted by \textit{Tareador} (for 1, 2, 4, 8, 16, 32 and 64 processors) for the task decomposition specified with Tareador. Are the results close to the ideal case? Reason about your answer.
-
-\begin{enumerate}
-	\item \textbf{Include the relevant portion of the codes that implement the two versions (\textit{Leaf} and \textit{Tree}), commenting whatever necessary.}
-\end{enumerate}
-\begin{enumerate}[resume]
-	\item \textbf{For the the Leaf and Tree strategies, include the speed{up (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed,
-			including captures of Paraver windows to justify your explanations.}
-	\end{enumerate}
