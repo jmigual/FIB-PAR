@@ -1,0 +1,51 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=2cm]{geometry}		% For desired margins
+\usepackage{fontspec}					% utf-8 support
+\usepackage{enumitem}					% Continuous enumerations
+\usepackage{float}						% Floating images
+\usepackage{pgfplots}					% Custom plots
+
+\pgfplotsset{compat=1.13}
+
+\title{PAR: Laboratory 4 \\
+		\texttt{\large par4201}}
+\author{Joan Marcè i Igual \and Esteve Tarragó i Sanchis}
+
+\newenvironment{questionenum}
+{%
+\newcommand{\question}[1]{
+\begin{enumerate}
+	\item\bfseries ##1
+\end{enumerate}
+}}{%
+}
+
+\newcommand{\seamusdefault}{\textbullet}
+\newcommand{\seamusx}{x}
+\newcommand{\seamusy}{y}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Analysis con Tareador}
+\begin{questionenum}
+	\question{Pepito}
+\end{questionenum}
+
+\section{Parallelization and performance analysis with tasks}
+
+
+\end{document}
+
+Include the relevant parts of the modified \texttt{multisort-tareador.c} code and comment where the calls to the Tareador API have been placed. Comment also about the task graph generated and the causes of the dependences that appear.
+\item Write a table with the execution time and speed-up predicted by \textit{Tareador} (for 1, 2, 4, 8, 16, 32 and 64 processors) for the task decomposition specified with Tareador. Are the results close to the ideal case? Reason about your answer.
+
+\begin{enumerate}
+	\item \textbf{Include the relevant portion of the codes that implement the two versions (\textit{Leaf} and \textit{Tree}), commenting whatever necessary.}
+\end{enumerate}
+\begin{enumerate}[resume]
+	\item \textbf{For the the Leaf and Tree strategies, include the speed{up (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed,
+			including captures of Paraver windows to justify your explanations.}
+	\end{enumerate}
