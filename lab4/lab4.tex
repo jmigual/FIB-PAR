@@ -121,9 +121,11 @@ void multisort(long n, T data[n], T tmp[n]) {
 					log ticks with fixed point,
 					xtick={1,2,4,8,16,32,64},
 					xlabel = Number of processors,
-					ylabel = Time (ms)
+					ylabel = Time (ms),
+                    domain = 1:64
 				]
 				\addplot table[x=P,y=T]{data/tareador_time.csv};
+                \addplot [mark=none, dashed]{20000/x};
 			\end{semilogxaxis}
 			\end{tikzpicture}
 			\caption{Time by the number of processors}
@@ -136,9 +138,11 @@ void multisort(long n, T data[n], T tmp[n]) {
 						log ticks with fixed point,
 						xtick={1,2,4,8,16,32,64},
 						xlabel = Number of procesors,
-						ylabel = Speedup
+						ylabel = Speedup,
+                        domain=1:20
 					]
 					\addplot table[x=P,y=S]{data/tareador_time.csv};
+                    \addplot [mark=none, dashed]{x};
 				\end{semilogxaxis}
 			\end{tikzpicture}
 			\caption{Speedup by number of processors}
@@ -245,9 +249,11 @@ void multisort(long n, T data[n], T tmp[n]) {
             \begin{axis}[
                     xmin=0,xmax=12,
                     xlabel=Number of processors,
-                    ylabel=Time (ms)
+                    ylabel=Time (ms),
+                    domain=1:12
                 ]
                 \addplot table[x=P,y=T]{data/tree_time.csv};
+                \addplot [mark=none, dashed]{6/x};
             \end{axis}
             \end{tikzpicture}
             \caption{Execution time of \texttt{multisort-omp-tree.c} by number of processors}
@@ -259,9 +265,11 @@ void multisort(long n, T data[n], T tmp[n]) {
                 \begin{axis}[
                         xmin=0,xmax=12,
                         xlabel=Number of processors,
-                        ylabel=Speeup
+                        ylabel=Speeup,
+                        domain=1:12
                     ]
                     \addplot table[x=P,y=S]{data/tree_speedup.csv};
+                    \addplot [mark=none, dashed]{x};
                 \end{axis}
             \end{tikzpicture}
             \caption{Speedup of \texttt{multisort-omp-tree.c} by number of processors}
@@ -277,9 +285,11 @@ void multisort(long n, T data[n], T tmp[n]) {
                 \begin{axis}[
                         xmin=0,xmax=12,
                         xlabel=Number of processors,
-                        ylabel=Time (ms)
+                        ylabel=Time (ms),
+                        domain=1:12
                     ]
                     \addplot table[x=P,y=T]{data/leaf_time.csv};
+                    \addplot [mark=none, dashed]{6/x};
                 \end{axis}
             \end{tikzpicture}
             \caption{Execution time of \texttt{multisort-omp-leaf.c} by number of processors}
@@ -291,9 +301,11 @@ void multisort(long n, T data[n], T tmp[n]) {
                 \begin{axis}[
                         xmin=0,xmax=12,
                         xlabel=Number of processors,
-                        ylabel=Speeup
+                        ylabel=Speedup,
+                        domain=0:12
                     ]
                     \addplot table[x=P,y=S]{data/leaf_speedup.csv};
+                    \addplot [mark=none, dashed]{x};
                 \end{axis}
             \end{tikzpicture}
             \caption{Speedup of \texttt{multisort-omp-leaf.c} by number of processors}
@@ -304,6 +316,43 @@ void multisort(long n, T data[n], T tmp[n]) {
     Comparing the \autoref{fig:tree_speedup} and the \autoref{fig:leaf_speedup} it can be seen that the speedup is higher in the \texttt{tree} implementation than in the \texttt{leaf} implementation for the same number of processors. This is because the \texttt{leaf} implementation only allows the parallelization once \texttt{tree} implementation allows each task to do its own recursion allowing a better distribution of resources.
     
 	\question{Analyze the influence of the recursivity depth in the \textit{Tree} version, including the execution time plot, when changing the recursion depth and using 8 threads. Reason about the behavior observed. Is there an optimal value?}
+    
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}[t]{0.49\textwidth}
+            \begin{tikzpicture}
+                \begin{semilogxaxis}[
+                        xmin=0,xmax=4096,
+                        log ticks with fixed point,
+                        xtick={1,2,4,8,16,32,64,128,256,512,1024,2048,4096},
+                        xticklabels={1,2,4,8,16,32,64,128,256,512,1024,2048,4096},
+                        x tick label style={yshift=-0.5ex,rotate=45, anchor=east},
+                        xlabel = Recursion depth,
+                        ylabel = Execution time
+                    ]
+                    \addplot table[x=D,y=T]{data/recursion_depth.csv};
+                \end{semilogxaxis}
+            \end{tikzpicture}
+            \caption{Execution time by recursion depth}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.49\textwidth}
+            \begin{tikzpicture}
+                \begin{semilogxaxis}[
+                        xmin=0,xmax=4096,
+                        log ticks with fixed point,
+                        xtick={1,2,4,8,16,32,64,128,256,512,1024,2048,4096},
+                        xticklabels={1,2,4,8,16,32,64,128,256,512,1024,2048,4096},
+                        x tick label style={yshift=-0.5ex,rotate=45, anchor=east},
+                        xlabel = Recursion depth,
+                        ylabel = Seedup
+                    ]
+                    \addplot table[x=D,y=S]{data/recursion_depth.csv};
+                \end{semilogxaxis}
+            \end{tikzpicture}
+            \caption{Speedup by recursion depth}
+        \end{minipage}
+    \end{figure}
 \end{questionenum}
 
 
@@ -311,8 +360,132 @@ void multisort(long n, T data[n], T tmp[n]) {
 \section{Parallelization and performance analysis with dependent tasks}
 \begin{questionenum}
 	\question{Include the relevant portion of the code that implements the \textit{Tree} version with task dependencies, commenting whatever necessary.}
+    
+    This code allows for two possible implementations, one using only a \texttt{taskwait} solution and the other using both \texttt{taskwait} and \texttt{taskgroup}.
+    
+    \begin{lstlisting}[language=C, title=\texttt{multisort-omp-tree-dep-taskwait.c}]
+// Solution using only taskwait
+
+void merge(long n, T left[n], T right[n], T result[n*2], long start, long length) {
+    if (length < MIN_MERGE_SIZE*2L) {
+        // Base case
+        basicmerge(n, left, right, result, start, length);
+    } else {
+        // Recursive decomposition
+        #pragma omp task
+        merge(n, left, right, result, start, length/2);
+        #pragma omp task
+        merge(n, left, right, result, start + length/2, length/2);
+        
+        // Wait for the same level tasks to finish
+        #pragma omp taskwait
+    }
+}
+
+void multisort(long n, T data[n], T tmp[n]) {
+    if (n >= MIN_SORT_SIZE*4L) {
+        // Recursive decomposition
+        #pragma omp task depend(out: data[0])
+        multisort(n/4L, &data[0], &tmp[0]);
+        #pragma omp task depend(out: data[n/4L])
+        multisort(n/4L, &data[n/4L], &tmp[n/4L]);
+        #pragma omp task depend(out: data[n/2L])
+        multisort(n/4L, &data[n/2L], &tmp[n/2L]);
+        #pragma omp task depend(out: data[3L*n/4L])
+        multisort(n/4L, &data[3L*n/4L], &tmp[3L*n/4L]);
+        
+        #pragma omp task depend(in: data[0], data[n/4L]) depend(out: tmp[0])
+        merge(n/4L, &data[0], &data[n/4L], &tmp[0], 0, n/2L);
+        #pragma omp task depend(in: data[n/2L], data[3L*n/4L]) depend(out: tmp[n/2L])
+        merge(n/4L, &data[n/2L], &data[3L*n/4L], &tmp[n/2L], 0, n/2L);
+        #pragma omp task depend(in: tmp[0], tmp[n/2L])
+        merge(n/2L, &tmp[0], &tmp[n/2L], &data[0], 0, n);
+        
+        // Wait for all the same level tasks to finish
+        #pragma omp taskwait
+    } else {
+        // Base case
+        basicsort(n, data);
+    }
+}
+
+    \end{lstlisting}
+    
+    \begin{lstlisting}[language=C, title=\texttt{multisort-omp-tree-dep-taskgroup.c}]
+// Solution using both taskwait and taskgroup
+    
+void merge(long n, T left[n], T right[n], T result[n*2], long start, long length) {
+    if (length < MIN_MERGE_SIZE*2L) {
+        // Base case
+        basicmerge(n, left, right, result, start, length);
+    } else {
+        // Recursive decomposition
+        #pragma omp task
+        merge(n, left, right, result, start, length/2);
+        #pragma omp task
+        merge(n, left, right, result, start + length/2, length/2);
+    }
+}
+
+void multisort(long n, T data[n], T tmp[n]) {
+    if (n >= MIN_SORT_SIZE*4L) {
+        // Recursive decomposition
+        #pragma omp task depend(out: data[0])
+        multisort(n/4L, &data[0], &tmp[0]);
+        #pragma omp task depend(out: data[n/4L])
+        multisort(n/4L, &data[n/4L], &tmp[n/4L]);
+        #pragma omp task depend(out: data[n/2L])
+        multisort(n/4L, &data[n/2L], &tmp[n/2L]);
+        #pragma omp task depend(out: data[3L*n/4L])
+        multisort(n/4L, &data[3L*n/4L], &tmp[3L*n/4L]);
+        
+        #pragma omp task depend(in: data[0], data[n/4L]) depend(out: tmp[0])
+        #pragma omp taskgroup // Wait all the tasks to finish
+        {
+            merge(n/4L, &data[0], &data[n/4L], &tmp[0], 0, n/2L);
+        }
+        #pragma omp task depend(in: data[n/2L], data[3L*n/4L]) depend(out: tmp[n/2L])
+        #pragma omp taskgroup // Wait all the tasks to finish
+        {
+            merge(n/4L, &data[n/2L], &data[3L*n/4L], &tmp[n/2L], 0, n/2L);
+        }
+        #pragma omp task depend(in: tmp[0], tmp[n/2L])
+        #pragma omp taskgroup // Wait all the tasks to finish
+        {
+            merge(n/2L, &tmp[0], &tmp[n/2L], &data[0], 0, n);
+        }
+        // Wait all the same level tasks to finish
+        #pragma omp taskwait
+    } else {
+        // Base case
+        basicsort(n, data);
+    }
+}
+    \end{lstlisting}
 	
 	\question{Reason about the performance that is observed, including the speedup plots that have been obtained different numbers of processors and with captures of Paraver windows to justify your reasoning.}
+    
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                    width=0.7\textwidth,height=0.5\textwidth,
+                    xmin=0,xmax=12,
+                    xlabel=Number of processors,
+                    ylabel=Speedup,
+                    legend pos = north west,
+                    domain=0:12
+                ]
+                \addplot table[x=P,y=S]{data/dep_taskgroup.csv};
+                \addplot table[x=P,y=S]{data/dep_taskwait.csv};
+                \addplot [mark=none, dashed] {x};
+                \legend{Taskgroup, Taskwait}
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Speedup of \texttt{multisort-omp-dep-taskgroup.c} and \texttt{multisort-omp-dep-taskwait.c} by number of processors}
+        \label{fig:dep}
+    \end{figure}
+    
 \end{questionenum}
 
 \end{document}
