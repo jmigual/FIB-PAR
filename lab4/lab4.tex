@@ -17,8 +17,7 @@
 		\texttt{\large par4201}}
 \author{Joan Marcè i Igual \and Esteve Tarragó i Sanchis}
 
-\newenvironment{questionenum}
-{%
+\newenvironment{questionenum}{%
 \setlist[enumerate]{resume}
 \restartlist{enumerate}
 \newcommand{\question}[1]{
@@ -111,13 +110,47 @@ void multisort(long n, T data[n], T tmp[n]) {
 \end{lstlisting}
 	
 	\question{Write a table with the execution time and speed-up predicted by \textit{Tareador} (for 1, 2, 4, 8, 16, 32 and 64 processors) for the task decomposition specified with Tareador. Are the results close to the ideal case? Reason about your answer.}
+	
+	\begin{figure}[H]
+		\centering
+		\begin{minipage}[t]{0.45\textwidth}
+			\begin{tikzpicture}
+			\begin{semilogxaxis}[
+					xmin = 0, xmax = 64,
+					log ticks with fixed point,
+					xtick={1,2,4,8,16,32,64},
+					xlabel = Number of processors,
+					ylabel = Time (ms)
+				]
+				\addplot table[x=P,y=T]{data/tareador_time.csv};
+			\end{semilogxaxis}
+			\end{tikzpicture}
+			\caption{Time by the number of processors}
+		\end{minipage}
+		\hfill
+		\begin{minipage}[t]{0.45\textwidth}
+			\begin{tikzpicture}
+				\begin{semilogxaxis}[
+						xmin=0, xmax=64,
+						log ticks with fixed point,
+						xtick={1,2,4,8,16,32,64},
+						xlabel = Number of procesors,
+						ylabel = Speedup
+					]
+					\addplot table[x=P,y=S]{data/tareador_time.csv};
+				\end{semilogxaxis}
+			\end{tikzpicture}
+			\caption{Speedup by number of processors}
+		\end{minipage}
+	\end{figure}
 \end{questionenum}
 
 \section{Parallelization and performance analysis with tasks}
 \begin{questionenum}
 	\question{Include the relevant portion of the codes that implement the two versions (\textit{Leaf} and \textit{Tree}), commenting whatever necessary.}
 	\question{For the the Leaf and Tree strategies, include the speedup (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed, including captures of Paraver windows to justify your explanations.}
-	\question{Analyze the inuence of the recursivity depth in the \textit{Tree} version, including the execution time plot, when changing the recursion depth and using 8 threads. Reason about the behavior observed. Is there an optimal value?}
+	\question{Analyze the in
+uence of the recursivity depth in the \textit{Tree} version, including the execution time plot, when changing the recursion depth and using 8 threads. Reason about the behavior observed. Is there an optimal value?}
 \end{questionenum}
 
 \section{Parallelization and performance analysis with dependent tasks}
