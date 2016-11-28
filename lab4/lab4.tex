@@ -7,6 +7,7 @@
 \usepackage[dvipsnames]{xcolor}			% Colors
 \usepackage{pgfplots}					% Custom plots
 \usepackage{listings}					% Code highlighting
+\usepackage[hidelinks]{hyperref}		% Hyper links
 
 \pgfplotsset{compat=1.13}
 
@@ -113,7 +114,7 @@ void multisort(long n, T data[n], T tmp[n]) {
 	
 	\begin{figure}[H]
 		\centering
-		\begin{minipage}[t]{0.45\textwidth}
+		\begin{minipage}[t]{0.49\textwidth}
 			\begin{tikzpicture}
 			\begin{semilogxaxis}[
 					xmin = 0, xmax = 64,
@@ -128,7 +129,7 @@ void multisort(long n, T data[n], T tmp[n]) {
 			\caption{Time by the number of processors}
 		\end{minipage}
 		\hfill
-		\begin{minipage}[t]{0.45\textwidth}
+		\begin{minipage}[t]{0.49\textwidth}
 			\begin{tikzpicture}
 				\begin{semilogxaxis}[
 						xmin=0, xmax=64,
@@ -148,7 +149,7 @@ void multisort(long n, T data[n], T tmp[n]) {
 \section{Parallelization and performance analysis with tasks}
 \begin{questionenum}
 	\question{Include the relevant portion of the codes that implement the two versions (\textit{Leaf} and \textit{Tree}), commenting whatever necessary.}
-	\question{For the the Leaf and Tree strategies, include the speedup (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed, including captures of Paraver windows to justify your explanations.}
+	
     \begin{lstlisting}[language=C, title=\texttt{multisort-omp-tree.c}]
 void merge(long n, T left[n], T right[n], T result[n*2], long start, long length) {
     if (length < MIN_MERGE_SIZE*2L) {
@@ -185,7 +186,8 @@ void multisort(long n, T data[n], T tmp[n]) {
             merge(n/4L, &data[n/2L], &data[3L*n/4L], &tmp[n/2L], 0, n/2L);
         }
         
-        // Start another group of tasks to merge the remaining two vectors
+        // Start another group of tasks to merge the remaining two vectors, this group depends on
+        // the previous taskgroup
         #pragma omp taskgroup
         {
             #pragma omp task
@@ -197,6 +199,109 @@ void multisort(long n, T data[n], T tmp[n]) {
     }
 }
     \end{lstlisting}
+    
+    
+    \begin{lstlisting}[language=C, title=\texttt{multisort-omp-leaf.c}]
+void merge(long n, T left[n], T right[n], T result[n*2], long start, long length) {
+    if (length < MIN_MERGE_SIZE*2L) {
+        // Base case for merge this is the only point to set a task
+        #pragma omp task
+        basicmerge(n, left, right, result, start, length);
+    } else {
+        // Recursive decomposition
+        merge(n, left, right, result, start, length/2);
+        merge(n, left, right, result, start + length/2, length/2);
+    }
+}
+
+void multisort(long n, T data[n], T tmp[n]) {
+    if (n >= MIN_SORT_SIZE*4L) {
+        // Recursive decomposition
+        multisort(n/4L, &data[0], &tmp[0]);
+        multisort(n/4L, &data[n/4L], &tmp[n/4L]);
+        multisort(n/4L, &data[n/2L], &tmp[n/2L]);
+        multisort(n/4L, &data[3L*n/4L], &tmp[3L*n/4L]);
+        
+        #pragma omp taskwait
+        merge(n/4L, &data[0], &data[n/4L], &tmp[0], 0, n/2L);
+        merge(n/4L, &data[n/2L], &data[3L*n/4L], &tmp[n/2L], 0, n/2L);
+        
+        #pragma omp taskwait
+        merge(n/2L, &tmp[0], &tmp[n/2L], &data[0], 0, n);
+    } else {
+        // Base case, in this implementation this is the only point to set the task
+        #pragma omp task
+        basicsort(n, data);
+    }
+}
+    \end{lstlisting}
+    
+    \question{For the the Leaf and Tree strategies, include the speedup (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed, including captures of Paraver windows to justify your explanations.}
+    
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}[t]{0.49\textwidth}
+            \begin{tikzpicture}
+            \begin{axis}[
+                    xmin=0,xmax=12,
+                    xlabel=Number of processors,
+                    ylabel=Time (ms)
+                ]
+                \addplot table[x=P,y=T]{data/tree_time.csv};
+            \end{axis}
+            \end{tikzpicture}
+            \caption{Execution time of \texttt{multisort-omp-tree.c} by number of processors}
+            \label{fig:tree_time}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.49\textwidth}
+            \begin{tikzpicture}
+                \begin{axis}[
+                        xmin=0,xmax=12,
+                        xlabel=Number of processors,
+                        ylabel=Speeup
+                    ]
+                    \addplot table[x=P,y=S]{data/tree_speedup.csv};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Speedup of \texttt{multisort-omp-tree.c} by number of processors}
+            \label{fig:tree_speedup}
+        \end{minipage}
+    \end{figure}
+
+
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}[t]{0.49\textwidth}
+            \begin{tikzpicture}
+                \begin{axis}[
+                        xmin=0,xmax=12,
+                        xlabel=Number of processors,
+                        ylabel=Time (ms)
+                    ]
+                    \addplot table[x=P,y=T]{data/leaf_time.csv};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Execution time of \texttt{multisort-omp-leaf.c} by number of processors}
+            \label{fig:leaf_time}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.49\textwidth}
+            \begin{tikzpicture}
+                \begin{axis}[
+                        xmin=0,xmax=12,
+                        xlabel=Number of processors,
+                        ylabel=Speeup
+                    ]
+                    \addplot table[x=P,y=S]{data/leaf_speedup.csv};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Speedup of \texttt{multisort-omp-leaf.c} by number of processors}
+            \label{fig:leaf_speedup}
+        \end{minipage}
+    \end{figure}
+    
+    Comparing the \autoref{fig:tree_speedup} and the \autoref{fig:leaf_speedup} it can be seen that the speedup is higher in the \texttt{tree} implementation than in the \texttt{leaf} implementation for the same number of processors. This is because the \texttt{leaf} implementation only allows the parallelization once \texttt{tree} implementation allows each task to do its own recursion allowing a better distribution of resources.
     
 	\question{Analyze the influence of the recursivity depth in the \textit{Tree} version, including the execution time plot, when changing the recursion depth and using 8 threads. Reason about the behavior observed. Is there an optimal value?}
 \end{questionenum}
