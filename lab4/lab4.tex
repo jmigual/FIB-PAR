@@ -8,6 +8,7 @@
 \usepackage{pgfplots}					% Custom plots
 \usepackage{listings}					% Code highlighting
 \usepackage[hidelinks]{hyperref}		% Hyper links
+\usepackage{graphicx}					% To include images
 
 \pgfplotsset{compat=1.13}
 
@@ -45,6 +46,8 @@
 \tableofcontents
 
 \section{Analysis con Tareador}
+The aim of this Lab is to compare different implementations of recursive parallelism seen in class. We are going to experiment with the \emph{Tree} and \emph{Leaf} implementations and also with task dependencies to see which one is the best for our program.
+
 \begin{questionenum}
 	\question{Include the relevant parts of the modified \texttt{multisort-tareador.c} code and comment where the calls to the Tareador API have been placed. Comment also about the task graph generated and the causes of the dependences that appear.}
 	
@@ -109,6 +112,11 @@ void multisort(long n, T data[n], T tmp[n]) {
 	}
 }
 \end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/dependency_graph}
+\end{figure}
 	
 	\question{Write a table with the execution time and speed-up predicted by \textit{Tareador} (for 1, 2, 4, 8, 16, 32 and 64 processors) for the task decomposition specified with Tareador. Are the results close to the ideal case? Reason about your answer.}
 	
@@ -148,6 +156,8 @@ void multisort(long n, T data[n], T tmp[n]) {
 			\caption{Speedup by number of processors}
 		\end{minipage}
 	\end{figure}
+
+    As the graphics show, the results are close to the ideal case in up to 16 processors. The reason tat the speed-up doesn't increase with 32 and 64 processors is the task granularity or, in other words, the size of the problem introduced doesn't allow more than 16 tasks in parallel. 
 \end{questionenum}
 
 \section{Parallelization and performance analysis with tasks}
@@ -353,6 +363,8 @@ void multisort(long n, T data[n], T tmp[n]) {
             \caption{Speedup by recursion depth}
         \end{minipage}
     \end{figure}
+
+    The optimal value is 256 of recursion depth. It obtains a good equilibrium between the execution time and the overhead introduced. A bigger number would make the speedup to be reduced and a smaller one would introduce more overhead.
 \end{questionenum}
 
 
@@ -486,6 +498,15 @@ void multisort(long n, T data[n], T tmp[n]) {
         \label{fig:dep}
     \end{figure}
     
+    The results show that the overhead starts increasing with more than 4 processors. As it can be seen in the \verb|Paraver| capture this is due to task synchronization.
+    
+    Comparing the two different versions of the \emph{Tree} version, there is a slightly increase of performance with \verb|taskgroup| as it was expected because there is less wait between the tasks.
 \end{questionenum}
+
+\section{Conclusion}
+Thanks to the experiments that have been run, it can be seen that the \emph{Tree} implementation performs better than the \emph{Leaf} one. That is because the work of creating each task can be organized in different threads.
+
+I has also been noticed a great improvement of performance when the task dependencies have been introduced. That reduced unnecessary waiting time of threads which leaded to smaller execution times.
+
 
 \end{document}
