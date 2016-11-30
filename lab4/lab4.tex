@@ -9,8 +9,12 @@
 \usepackage{listings}					% Code highlighting
 \usepackage[hidelinks]{hyperref}		% Hyper links
 \usepackage{graphicx}					% To include images
+\usepackage{tikz}						% To draw images
+\usepackage{pgfplots}					% To draw graphs
+\usepackage[dvipsnames]{xcolor	}
 
 \pgfplotsset{compat=1.13}
+\usetikzlibrary{positioning}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
@@ -496,6 +500,27 @@ void multisort(long n, T data[n], T tmp[n]) {
         \end{tikzpicture}
         \caption{Speedup of \texttt{multisort-omp-dep-taskgroup.c} and \texttt{multisort-omp-dep-taskwait.c} by number of processors}
         \label{fig:dep}
+    \end{figure}
+    
+    \begin{figure}[H]
+    	\centering
+    	\includegraphics[width=\textwidth]{images/multisort-omp-paraver.png}
+    	\begin{tikzpicture}
+    		 \begin{axis}[
+		    		 hide axis,
+		    		 xmin = 10, xmax = 50, ymin = 0, ymax = 0.4,
+		    		 legend style = { draw = white!15!black, legend cell align = left}
+	    		 ]
+	    		 \addlegendimage{only marks, red};
+	    		 \addlegendentry{Syncronization};
+	    		 \addlegendimage{only marks, blue};
+	    		 \addlegendentry{Running};
+	    		 \addlegendimage{only marks, yellow};
+	    		 \addlegendentry{Scheduling and Fork/Join};
+	    		 \addlegendimage{only marks, Cyan};
+	    		 \addlegendentry{Idle};
+    		 \end{axis}
+    	\end{tikzpicture}
     \end{figure}
     
     The results show that the overhead starts increasing with more than 4 processors. As it can be seen in the \verb|Paraver| capture this is due to task synchronization.
