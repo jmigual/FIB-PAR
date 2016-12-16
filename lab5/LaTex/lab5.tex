@@ -38,6 +38,8 @@
 	showspaces=false,
 	showstringspaces=false,
 	tabsize=4,
+	numbers=left,
+	numbersep=5pt,
 	stringstyle=\color{orange},
 	commentstyle=\color{OliveGreen},
 	keywordstyle=\color{blue},
@@ -54,6 +56,50 @@
 \begin{questionenum}
 	\question{Include the relevant parts of the modified \texttt{solver-tareador.c} code and comment where the calls to the Tareador API have been placed. Comment also about the task graph generated and the causes of the dependencies that appear in the two solvers: \emph{Jacobi} and \emph{Gauss-Seidel}. How will you protect them in the parallel \texttt{OpenMP} code.}
 \end{questionenum}
+
+\begin{center}	
+	\begin{minipage}{0.8\textwidth}
+\begin{lstlisting}[language=C, title=\texttt{heat-tareador.c}]
+switch( param.algorithm ) {
+	case 0: // JACOBI
+		tareador_start_task("relax_jacobi");
+		residual = relax_jacobi(param.u, param.uhelp, np, np);
+		tareador_end_task("relax_jacobi");
+		// Copy uhelp into u
+		tareador_start_task("Copy_mat");
+		copy_mat(param.uhelp, param.u, np, np);
+		tareador_end_task("Copy_mat");
+		break;
+	case 1: // GAUSS
+		tareador_start_task("relax_gauss");
+		residual = relax_gauss(param.u, np, np);
+		tareador_end_task("relax_gauss");
+		break;
+}
+		\end{lstlisting}
+	\end{minipage}
+	
+	\begin{minipage}{0.8\textwidth}
+		\begin{lstlisting}[language=C, title=\texttt{solver-tareador.c}]
+// Set tareador task
+tareador_start_task("jacobi_relax");
+// Disable sum object for better parallelization potential
+tareador_disable_object(&sum);
+utmp[i*sizey+j]= 0.25 * ( u[ i*sizey     + (j-1) ]+  // left
+u[ i*sizey     + (j+1) ]+  // right
+u[ (i-1)*sizey + j     ]+  // top
+u[ (i+1)*sizey + j     ]); // bottom
+diff = utmp[i*sizey+j] - u[i*sizey + j];
+sum += diff * diff;
+
+// Reenable sum object
+tareador_enable_object(&u);
+
+// End of tareador task
+tareador_end_task("jacobi_relax");
+		\end{lstlisting}
+	\end{minipage}
+\end{center}
 
 \section{OpenMP parallelization and execution analysis: \emph{Jacobi}}
 \begin{questionenum}
