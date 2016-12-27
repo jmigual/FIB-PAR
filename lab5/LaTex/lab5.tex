@@ -105,6 +105,15 @@ tareador_end_task("jacobi_relax");
 \begin{questionenum}
 	\question{Describe the data decomposition strategy that is applied to solve the problem, including a picture with the part of the data structure that is assigned to each processor.}
 	
+	The decomposition strategy used is giving each thread a different part of the matrix by rows. This can be seen in the \autoref{fig:jacobi-data} where each thread has a different block of rows of the matrix to be computed. 
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.5\textwidth]{images/jacobi/data}
+		\caption{Figure describing the data decomposition, each thread has one color}
+		\label{fig:jacobi-data}
+	\end{figure}
+	
 	\question{Include the relevant portions of the parallel code that you implemented to solve the heat equation using the \emph{Jacobi} solver, commenting whatever necessary. Including captures of Paraver windows to justify your explanations and the differences observed in the execution.}
 	
 	\question{Include the speed-up (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed.}
