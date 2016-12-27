@@ -12,6 +12,7 @@
 \usepackage{tikz}						% To draw images
 \usepackage{pgfplots}					% To draw graphs
 \usepackage[dvipsnames]{xcolor	}
+\usepackage{subcaption}
 
 \pgfplotsset{compat=1.13}
 \usetikzlibrary{positioning}
@@ -116,8 +117,132 @@ tareador_end_task("jacobi_relax");
 	
 	\question{Include the relevant portions of the parallel code that you implemented to solve the heat equation using the \emph{Jacobi} solver, commenting whatever necessary. Including captures of Paraver windows to justify your explanations and the differences observed in the execution.}
 	
+	The heat computation part can be optimized in the following way with \texttt{OpenMP}. 
+	\begin{center}
+		
+	\begin{minipage}{0.9\textwidth}
+		\begin{lstlisting}[language=C, title=\texttt{solver-tareador.c}]
+double relax_jacobi (double *u, double *utmp, unsigned sizex, unsigned sizey)
+{
+	double diff, sum=0.0;
+	
+	// In this part max threads is used instead of get_num_threads() beacuse 
+	// there's only one thread at this point.
+	int howmany = omp_get_max_threads();
+		
+	// Parallelize by blocks, assigning each block to one different thread
+	#pragma omp parallel for reduction(+:sum) private(diff)
+	for (int blockid = 0; blockid < howmany; ++blockid) {
+		int i_start = lowerb(blockid, howmany, sizex);
+		int i_end = upperb(blockid, howmany, sizex);
+		for (int i=max(1, i_start); i<= min(sizex-2, i_end); i++) {
+			for (int j=1; j<= sizey-2; j++) {
+				utmp[i*sizey+j]= 0.25 * ( u[ i*sizey     + (j-1) ]+  // left
+				u[ i*sizey     + (j+1) ]+  // right
+				u[ (i-1)*sizey + j     ]+  // top
+				u[ (i+1)*sizey + j     ]); // bottom
+				diff = utmp[i*sizey+j] - u[i*sizey + j];
+				sum += diff * diff;
+			}
+		}
+	}
+	
+	return sum;
+}
+		\end{lstlisting}
+	\end{minipage}
+	\end{center}
+	
+	Also there's another complementary way to optimize. The \texttt{copy\_mat()} function can be parallelized to allow a better way of copying the matrix.
+	
+	\begin{center}
+		\begin{minipage}{0.8\textwidth}
+			\begin{lstlisting}[language=C, title=\texttt{solver-tareador.c}]
+#pragma omp parallel for collapse(2)
+for (int i=1; i<=sizex-2; i++)
+	for (int j=1; j<=sizey-2; j++)
+		v[ i*sizey+j] = u[ i*sizey+j ];
+			\end{lstlisting}
+		\end{minipage}
+	\end{center}
+
+	Another way to attack the problem is avoiding the matrix copy part and only swapping the pointers of the matrix. This can be done in the \texttt{heat-omp.c} file between the iterations.
+	
+	\begin{center}
+		\begin{minipage}{0.8\textwidth}
+			\begin{lstlisting}[language=C, title=\texttt{heat-omp.c}]
+residual = relax_jacobi(param.u, param.uhelp, np, np);
+// Swap the pointers to avoid copying the matrix
+double *temp = param.u;
+param.u = param.uhelp;
+param.uhelp = temp;
+
+// Disable the matrix copy
+//copy_mat(param.uhelp, param.u, np, np);
+			\end{lstlisting}
+		\end{minipage}
+	\end{center}
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=\textwidth]{images/jacobi/paraver-8}
+		\caption{Capture of \texttt{paraver} using 8 processors}
+		\label{fig:jacobi-paraver}
+	\end{figure}
+
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=\textwidth]{images/jacobi/paraver-8-zoom}
+		\caption{Zoom of \texttt{paraver} capture to show that the processor 0 is still doing work}
+		\label{fig:jacobi-paraver-zoom}
+	\end{figure}
+	
+	As it can be seen in the \autoref{fig:jacobi-paraver} all processors are working so the work is properly shared between all the processors. It seems that the processor 0 is only doing synchronizations but actually it's working too as it can be seen in the \autoref{fig:jacobi-paraver-zoom}.
+	
 	\question{Include the speed-up (strong scalability) plots that have been obtained for the different numbers of processors. Reason about the performance that is observed.}
+	
+	\begin{figure}[H]
+		\begin{subfigure}[t]{0.49\textwidth}
+			\begin{tikzpicture}
+				\begin{axis}[
+						width = \textwidth,
+						xmin = 1, xmax = 12,
+						domain = 0:12,
+						xlabel = number of processors,
+						ylabel = execution time,
+						enlarge x limits = 0.05,
+					]
+					\addplot table[x = P, y = T]{data/jacobi/elapsed.csv};
+					\addplot[dashed, mark = none] {4.5/x};
+				\end{axis}
+			\end{tikzpicture}
+			\caption{Elapsed time for each number of processors}
+			\label{fig:jacobi-elapsed}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.49\textwidth}		
+			\begin{tikzpicture}
+				\begin{axis}[
+						width = \textwidth,
+						xmin = 1, xmax = 12,
+						ymin = 0, ymax = 12,
+						domain = 0:12,
+						xlabel = number of processors,
+						ylabel = speedup,
+						enlarge x limits = 0.05,
+					]
+					\addplot[dashed, mark=none]{x};
+					\addplot table[x = P, y = S]{data/jacobi/speedup.csv};
+				\end{axis}
+			\end{tikzpicture}
+			\caption{Speedup obtained for each number of processors}
+			\label{fig:jacobi-speedup}
+		\end{subfigure}
+	\caption{Comparison between speedup and elapsed time by number of processors in the Jacobi solution}
+	\end{figure}
 \end{questionenum}
+
+As it can bee seen in the \autoref{fig:jacobi-speedup} the speedup increases and then it remains nearly constant. This is due to the overhead caused by \texttt{OpenMP} as the number of processors increases. If the data is divided by many processors there's more time spend during the synchronization than computing the value and that's why the speedup is not increasing anymore.
 
 \section{OpenMP parallelization and the execution analysis: \emph{Gauss-Seidel}}
 \begin{questionenum}
