@@ -338,16 +338,29 @@ double relax_gauss (double *u, unsigned sizex, unsigned sizey)
 			\end{tikzpicture}
 		\end{subfigure}
 	\end{figure}
+
+	We can see that the synchronizations costs are more than linear. This is due to the number of blocks which is quadratic in the number of threads and a flush is need in each region.
 	
 	\question{Explain how did you obtain the optimum value for the ration computation/synchronization in the parallelization of this solver for 8 threads.}
 \end{questionenum}
 
-\section{Optional}
 
-\begin{questionenum}
-	\question{If you have done the optional part in this laboratory assignment, please includde and comment in your report the relevant portions of the code, performance plots, or \emph{Paraver} windows that have been obtained.}
-\end{questionenum}
+	\begin{figure}[H]
+		\centering
+		\begin{tikzpicture}
+			\begin{axis}[
+					xmin = 4, xmax = 16,
+					ymin = 0, ymax = 7,
+					xlabel = Number of blocks,
+					ylabel = Time,
+					enlarge x limits = 0.05,
+				]
+				\addplot table[x=N, y=T]{data/gauss/optimum.csv};
+			\end{axis}
+		\end{tikzpicture}
+	\end{figure}
 
+We can see that the optimum value is 8, which mean 8 rows with 8 columns each. With a lower number there are threads with no job and with a higher value we are increasing the synchronization cost.
 
 
 \end{document}
